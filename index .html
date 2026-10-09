@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Household Expense Tracker & Financial Manager</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --success: #16a34a;
+            --danger: #dc2626;
+            --background: #f8fafc;
+            --card-bg: #ffffff;
+            --text: #1e293b;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--background);
+            color: var(--text);
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        h1, h2 {
+            text-align: center;
+            color: var(--primary);
+        }
+        .card {
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+            margin-bottom: 20px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        input, select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            box-sizing: border-box;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        th, td {
+            border: 1px solid #e2e8f0;
+            padding: 10px;
+            text-align: left;
+            font-size: 14px;
+        }
+        th {
+            background-color: #f1f5f9;
+        }
+        button {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 650;
+            width: 100%;
+            margin-top: 10px;
+        }
+        button:hover {
+            background-color: #1d4ed8;
+        }
+        .report-section {
+            display: none;
+        }
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .summary-box {
+            background: #f1f5f9;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .summary-box h3 {
+            margin: 0 0 10px 0;
+            font-size: 14px;
+            color: #64748b;
+        }
+        .summary-box p {
+            margin: 0;
+            font-size: 18px;
+            font-weight: bold;
+        }
+        ul {
+            padding-left: 20px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Household Expense Tracker & Financial Manager</h1>
+    
+    <!-- Input Form Card -->
+    <div class="card" id="input-card">
+        <h2>Enter Your Financial Details</h2>
+        
+        <div class="form-group">
+            <label>Monthly Salary / Income (₹):</label>
+            <input type="number" id="salary" placeholder="e.g. 50000" value="50000">
+        </div>
+        
+        <div class="form-group">
+            <label>Other Income (₹):</label>
+            <input type="number" id="otherIncome" placeholder="e.g. 5000" value="5000">
+        </div>
+
+        <h3>Monthly Expenses</h3>
+        <p style="font-size: 13px; color: #64748b;">Enter current month and optional previous month amounts for comparison.</p>
+        
+        <table id="expense-table">
+            <thead>
+                <tr>
+                    <th>Category</th>
+                    <th>Type</th>
+                    <th>Current Month (₹)</th>
+                    <th>Previous Month (₹)</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Rows will be injected by JavaScript -->
+            </tbody>
+        </table>
+
+        <button onclick="generateReport()">Generate Financial Report</button>
+    </div>
+
+    <!-- Financial Report Output Card -->
+    <div class="card report-section" id="report-card">
+        <h2>Financial Management Report</h2>
+        
+        <div class="summary-grid" id="summary-grid">
+            <!-- Dynamic Summary Boxes -->
+        </div>
+
+        <h3>Detailed Expense Analysis</h3>
+        <table id="report-table">
+            <thead>
+                <tr>
+                    <th>Category</th>
+                    <th>Current (₹)</th>
+                    <th>Previous (₹)</th>
+                    <th>Difference</th>
+                    <th>Change (%)</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+
+        <h3>Smart Budget Suggestions & Adjustments</h3>
+        <div id="suggestions-box" style="background: #f8fafc; padding: 15px; border-radius: 8px; border-left: 4px solid var(--primary);"></div>
+
+        <h3>Savings Plan Projections</h3>
+        <div id="savings-plan-box" style="background: #f8fafc; padding: 15px; border-radius: 8px; margin-top: 15px;"></div>
+
+        <h3>How We Manage Our Money</h3>
+        <ul id="money-tips"></ul>
+
+        <button onclick="editDetails()" style="background-color: #64748b; margin-top: 20px;">Edit Details</button>
+    </div>
+</div>
+
+<script>
+    const categories = [
+        { name: "Rent/House", type: "Fixed" },
+        { name: "Electricity", type: "Variable" },
+        { name: "Water", type: "Fixed" },
+        { name: "Gas", type: "Variable" },
+        { name: "Food/Groceries", type: "Essential" },
+        { name: "Education", type: "Essential" },
+        { name: "Transport", type: "Variable" },
+        { name: "Medical", type: "Essential" },
+        { name: "Mobile/Internet", type: "Fixed" },
+        { name: "Clothing", type: "Non-essential" },
+        { name: "Entertainment", type: "Non-essential" },
+        { name: "Shopping", type: "Non-essential" },
+        { name: "EMI/Loan", type: "Fixed" },
+        { name: "Other", type: "Variable" }
+    ];
+
+    // Populate input table
+    const tbody = document.querySelector("#expense-table tbody");
+    categories.forEach((cat, index) => {
+        let row = `<tr>
+            <td>${cat.name}</td>
+            <td>${cat.type}</td>
+            <td><input type="number" class="curr-amt" data-index="${index}" value="${getDefaultVal(cat.name)}"></td>
+            <td><input type="number" class="prev-amt" data-index="${index}" value="${getDefaultPrevVal(cat.name)}"></td>
+        </tr>`;
+        tbody.innerHTML += row;
+    });
+
+    function getDefaultVal(name) {
+        const defaults = {"Rent/House": 15000, "Electricity": 2000, "Water": 500, "Gas": 1000, "Food/Groceries": 8000, "Education": 3000, "Transport": 2500, "Medical": 1000, "Mobile/Internet": 1000, "Clothing": 2000, "Entertainment": 1500, "Shopping": 3000, "EMI/Loan": 5000, "Other": 1000};
+        return defaults[name] || 0;
+    }
+
+    function getDefaultPrevVal(name) {
+        const defaults = {"Rent/House": 15000, "Electricity": 1800, "Water": 500, "Gas": 900, "Food/Groceries": 7500, "Education": 3000, "Transport": 2200, "Medical": 500, "Mobile/Internet": 1000, "Clothing": 2500, "Entertainment": 1000, "Shopping": 4000, "EMI/Loan": 5000, "Other": 800};
+        return defaults[name] || 0;
+    }
+
+    function generateReport() {
+        let salary = parseFloat(document.getElementById("salary").value) || 0;
+        let otherIncome = parseFloat(document.getElementById("otherIncome").value) || 0;
+        let totalIncome = salary + otherIncome;
+
+        let currInputs = document.querySelectorAll(".curr-amt");
+        let prevInputs = document.querySelectorAll(".prev-amt");
+
+        let totalExpenses = 0;
+        let expenseDetails = [];
+        let highestExp = { name: "None", amount: -1 };
+        let lowestExp = { name: "None", amount: Infinity };
+        let maxIncreased = { name: "None", diff: -Infinity };
+        let maxDecreased = { name: "None", diff: Infinity };
+
+        categories.forEach((cat, i) => {
+            let curr = parseFloat(currInputs[i].value) || 0;
+            let prev = parseFloat(prevInputs[i].value) || 0;
+            let diff = curr - prev;
+            let percentChange = prev > 0 ? ((diff / prev) * 100).toFixed(1) : (curr > 0 ? 100 : 0);
+
+            totalExpenses += curr;
+
+            if (curr > highestExp.amount) highestExp = { name: cat.name, amount: curr };
+            if (curr < lowestExp.amount && curr >= 0) lowestExp = { name: cat.name, amount: curr };
+
+            if (diff > maxIncreased.diff) maxIncreased = { name: cat.name, diff: diff, curr: curr, prev: prev, percent: percentChange };
+            if (diff < maxDecreased.diff) maxDecreased = { name: cat.name, diff: diff, curr: curr, prev: prev, percent: percentChange };
+
+            expenseDetails.push({ name: cat.name, type: cat.type, curr, prev, diff, percentChange });
+        });
+
+        let monthlySavings = totalIncome - totalExpenses;
+        let savingsRate = totalIncome > 0 ? ((monthlySavings / totalIncome) * 100).toFixed(1) : 0;
+
+        // Render Summary Grid
+        document.getElementById("summary-grid").innerHTML = `
+            <div class="summary-box"><h3>Total Income</h3><p>₹${totalIncome.toLocaleString()}</p></div>
+            <div class="summary-box"><h3>Total Expenses</h3><p>₹${totalExpenses.toLocaleString()}</p></div>
+            <div class="summary-box"><h3>Monthly Savings</h3><p style="color: ${monthlySavings >= 0 ? 'var(--success)' : 'var(--danger)'};">₹${monthlySavings.toLocaleString()}</p></div>
+            <div class="summary-box"><h3>Savings Rate</h3><p>${savingsRate}%</p></div>
+            <div class="summary-box"><h3>Highest Expense</h3><p>${highestExp.name} (₹${highestExp.amount})</p></div>
+            <div class="summary-box"><h3>Lowest Expense</h3><p>${lowestExp.name} (₹${lowestExp.amount})</p></div>
+        `;
+
+        // Render Report Table
+        let reportTbody = document.querySelector("#report-table tbody");
+        reportTbody.innerHTML = "";
+        expenseDetails.forEach(item => {
+            let diffText = item.diff > 0 ? `+₹${item.diff}` : `-₹${Math.abs(item.diff)}`;
+            let color = item.diff > 0 ? 'color: var(--danger);' : (item.diff < 0 ? 'color: var(--success);' : '');
+            reportTbody.innerHTML += `<tr>
+                <td>${item.name}</td>
+                <td>₹${item.curr}</td>
+                <td>₹${item.prev}</td>
+                <td style="${color}">${diffText}</td>
+                <td style="${color}">${item.percentChange}%</td>
+            </tr>`;
+        });
+
+        // Suggestions & Analysis
+        let suggestionsHTML = `<p><strong>Analysis & Budget Suggestions:</strong></p><ul>`;
+        if (maxIncreased.diff > 0) {
+            suggestionsHTML += `<li><strong>Highest Increase:</strong> ${maxIncreased.name} increased by ₹${maxIncreased.diff} (${maxIncreased.percent}%). To manage it, you can optimize usage or look for budget-friendly alternatives.</li>`;
+        }
+        if (maxDecreased.diff < 0) {
+            suggestionsHTML += `<li><strong>Savings from Decrease:</strong> ${maxDecreased.name} decreased by ₹${Math.abs(maxDecreased.diff)}. This gives an additional amount of ₹${Math.abs(maxDecreased.diff)} that can be moved toward savings.</li>`;
+        }
+        if (monthlySavings < 0) {
+            suggestionsHTML += `<li>Your expenses exceed your income! Consider reducing variable spending like Shopping or Entertainment to balance your budget.</li>`;
+        } else {
+            suggestionsHTML += `<li>Great job maintaining a positive savings rate of ${savingsRate}%. Try to keep your non-essential spending under control.</li>`;
+        }
+        suggestionsHTML += `</ul>`;
+        document.getElementById("suggestions-box").innerHTML = suggestionsHTML;
+
+        // Savings Plan
+        let s3 = monthlySavings * 3;
+        let s6 = monthlySavings * 6;
+        let s12 = monthlySavings * 12;
+        document.getElementById("savings-plan-box").innerHTML = `
+            <p><strong>Projected Savings Accumulation:</strong></p>
+            <ul>
+                <li>Monthly Saving Target: <strong>₹${monthlySavings.toLocaleString()}</strong></li>
+                <li>3-Month Accumulated Savings: <strong>₹${s3.toLocaleString()}</strong></li>
+                <li>6-Month Accumulated Savings: <strong>₹${s6.toLocaleString()}</strong></li>
+                <li>12-Month Accumulated Savings: <strong>₹${s12.toLocaleString()}</strong></li>
+            </ul>
+        `;
+
+        // Money Tips
+        document.getElementById("money-tips").innerHTML = `
+            <li>Track every small expense consistently to catch unwanted leakages early.</li>
+            <li>Prioritize fixed and essential commitments (Rent, EMI, Utilities, Groceries) before allocating money to optional shopping.</li>
+            <li>Maintain an emergency fund equal to at least 3 to 6 months of your total expenses.</li>
+            <li>Review subscription services and utilities monthly to avoid dormant or wasteful spending.</li>
+            <li>Automate a fixed portion of your monthly savings right after receiving your salary.</li>
+        `;
+
+        // Toggle Views
+        document.getElementById("input-card").style.display = "none";
+        document.getElementById("report-card").style.display = "block";
+        window.scrollTo(0, 0);
+    }
+
+    function editDetails() {
+        document.getElementById("input-card").style.display = "block";
+        document.getElementById("report-card").style.display = "none";
+    }
+</script>
+
+</body>
+</html>
